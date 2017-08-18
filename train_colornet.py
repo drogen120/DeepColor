@@ -15,9 +15,9 @@ dataset_params = {
 "thread_num" : 1,
 }
 common_params = {
-"image_width" : 1024,
-"image_height" : 1024,
-"batch_size" : 2,
+"image_width" : 512,
+"image_height" : 512,
+"batch_size" : 5,
 }
 
 # =========================================================================== #
@@ -181,8 +181,8 @@ def main(_):
         color_net = colornet_class(colornet_params)
         color_net_shape = color_net.params.img_shape
 
-        input_tensor = tf.placeholder(tf.float32, shape=(None, 1024, 1024, 3), name='input_image')
-        gt_tensor = tf.placeholder(tf.float32, shape=(None, 1024, 1024, 3), name='groundtruth_image')
+        input_tensor = tf.placeholder(tf.float32, shape=(None, 512, 512, 3), name='input_image')
+        gt_tensor = tf.placeholder(tf.float32, shape=(None, 512, 512, 3), name='groundtruth_image')
 
         arg_scope = color_net.arg_scope(weight_decay=FLAGS.weight_decay, data_format=DATA_FORMAT)
         with slim.arg_scope(arg_scope):
@@ -200,6 +200,9 @@ def main(_):
         optimizer = tf_utils.configure_optimizer(FLAGS, learning_rate)
 
         summaries.add(tf.summary.scalar('learning_rate', learning_rate))
+        summaries.add(tf.summary.image('input_img', input_tensor))
+        summaries.add(tf.summary.image('gt_img', gt_tensor))
+        summaries.add(tf.summary.image('pre_img',predictions))
 
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):

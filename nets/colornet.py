@@ -26,18 +26,39 @@ def color_net(inputs,
     # End_points collect relevant activations for external use.
     end_points = {}
     with tf.variable_scope(scope, 'color_net', [inputs], reuse=reuse):
+        bs = 2
+
+        global_net = slim.repeat(inputs, 1, slim.conv2d, 8, [3, 3], scope='g_conv1')
+        global_net = slim.max_pool2d(global_net, [2, 2], scope='g_pool1')
+        global_net = slim.repeat(global_net, 1, slim.conv2d, 16, [3, 3], scope='g_conv2')
+        global_net = slim.max_pool2d(global_net, [2, 2], scope='g_pool2')
+        global_net = slim.repeat(global_net, 1, slim.conv2d, 32, [3, 3], scope='g_conv3')
+        global_net = slim.max_pool2d(global_net, [2, 2], scope='g_pool3')
+        global_net = slim.repeat(global_net, 1, slim.conv2d, 32, [3, 3], scope='g_conv4')
+        global_net = slim.max_pool2d(global_net, [2, 2], scope='g_pool4')
+        global_net = slim.repeat(global_net, 1, slim.conv2d, 64, [3, 3], scope='g_conv5')
+        global_net = slim.max_pool2d(global_net, [2, 2], scope='g_pool5')
+        global_net = slim.repeat(global_net, 1, slim.conv2d, 64, [3, 3], scope='g_conv6')
+        global_net = slim.max_pool2d(global_net, [2, 2], scope='g_pool6')
+        global_net = slim.flatten(global_net)
+        global_net = slim.fully_connected(global_net, 256, scope='g_fc1')
+        global_net = slim.fully_connected(global_net, 32, scope='g_fc2')
+        global_net = tf.reshape(global_net, [bs, 1, 1, 32])
+
         net = slim.repeat(inputs, 1, slim.conv2d, 8, [1, 1], scope='conv1')
         end_points['block1'] = net
         # net = slim.max_pool2d(net, [2, 2], scope='pool1')
         # Block 2.
-        net = slim.repeat(net, 1, slim.conv2d, 12, [1, 1], scope='conv2')
+        net = slim.repeat(net, 1, slim.conv2d, 16, [1, 1], scope='conv2')
         end_points['block2'] = net
         # net = slim.max_pool2d(net, [2, 2], scope='pool2')
         # Block 3.
-        net = slim.repeat(net, 1, slim.conv2d, 16, [1, 1], scope='conv3')
+        net = slim.repeat(net, 1, slim.conv2d, 32, [1, 1], scope='conv3')
         end_points['block3'] = net
         # net = slim.max_pool2d(net, [2, 2], scope='pool3')
-        colormask = slim.conv2d(net, 3, [1, 1], activation_fn=None, scope='conv4')
+        colormask = slim.conv2d(net + global_net, 3, [1, 1], scope='conv4')
+        end_points['colormask'] = colormask
+
         output = inputs * colormask
         # ch_r, ch_g, ch_b, ch_bias = tf.split(colormask, 4, axis = 3)
         # output_r = tf.matmul(inputs, ch_r, transpose_a=False, transpose_b=True)

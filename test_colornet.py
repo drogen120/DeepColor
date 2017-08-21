@@ -223,9 +223,9 @@ def main(_):
                 train_writer.add_summary(summary_str, i)
                 pre_images = pre_images * 255.0
                 img1 = Image.fromarray(pre_images[0].astype('uint8'), 'RGB')
-                img1.save("./test_result/{}.jpg".format(i))
+                img1.save("./test_result/{}.tiff".format(i))
                 img2 = Image.fromarray(pre_images[1].astype('uint8'), 'RGB')
-                img2.save("./test_result/{}.jpg".format(i+1))
+                img2.save("./test_result/{}.tiff".format(i+1))
 
                 i += 2
 

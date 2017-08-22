@@ -203,10 +203,10 @@ def main(_):
         summaries.add(tf.summary.image('input_img', input_tensor))
         summaries.add(tf.summary.image('gt_img', gt_tensor))
         summaries.add(tf.summary.image('pre_img',predictions))
-        red_mask, green_mask, blue_mask = tf.split(end_points['colormask'], 3, axis = 3)
-        summaries.add(tf.summary.image('red_mask',red_mask))
-        summaries.add(tf.summary.image('grenn_mask',green_mask))
-        summaries.add(tf.summary.image('blue_mask',blue_mask))
+        # red_mask, green_mask, blue_mask = tf.split(end_points['colormask'], 3, axis = 3)
+        # summaries.add(tf.summary.image('red_mask',red_mask))
+        # summaries.add(tf.summary.image('grenn_mask',green_mask))
+        # summaries.add(tf.summary.image('blue_mask',blue_mask))
 
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):

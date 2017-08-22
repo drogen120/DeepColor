@@ -56,10 +56,15 @@ def color_net(inputs,
         net = slim.repeat(net, 1, slim.conv2d, 64, [1, 1], scope='conv3')
         end_points['block3'] = net
         # net = slim.max_pool2d(net, [2, 2], scope='pool3')
-        colormask = slim.conv2d(net + global_net, 3, [1, 1], scope='conv4')
+        colormask = slim.conv2d(net + global_net, 12, [1, 1], scope='conv4')
         end_points['colormask'] = colormask
+        ch_r, ch_g, ch_b, ch_bias = tf.split(colormask, 4, axis=3)
 
-        output = inputs * colormask
+        output_r = tf.add_n(tf.split(inputs * ch_r, 3, axis=3))
+        output_g = tf.add_n(tf.split(inputs * ch_g, 3, axis=3))
+        output_b = tf.add_n(tf.split(inputs * ch_b, 3, axis=3))
+
+        output = tf.squeeze(tf.stack([output_r, output_g, output_b], axis=3)) + ch_bias
         # ch_r, ch_g, ch_b, ch_bias = tf.split(colormask, 4, axis = 3)
         # output_r = tf.matmul(inputs, ch_r, transpose_a=False, transpose_b=True)
         # output_r = tf.squeeze(output_r)

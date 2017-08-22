@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 from tensorflow.python.ops import control_flow_ops
 
 from dataset.dataset_raw import RawDataSet
@@ -175,7 +176,7 @@ def main(_):
         global_step = slim.create_global_step()
         ckpt = tf.train.get_checkpoint_state(os.path.dirname(FLAGS.train_dir))
         sess = tf.InteractiveSession()
-        dataset = RawDataSet(common_params, dataset_params)
+        # dataset = RawDataSet(common_params, dataset_params)
 
         colornet_class = nets_factory.get_network(FLAGS.model_name)
         colornet_params = colornet_class.default_params
@@ -216,18 +217,30 @@ def main(_):
 
         i = 0
         with slim.queues.QueueRunners(sess):
-
-            while (i < dataset.record_numbers):
-                input_images, output_images = dataset.batch()
-                pre_images, summary_str = sess.run([predictions, summary_op], feed_dict={input_tensor: input_images, gt_tensor: output_images})
-                train_writer.add_summary(summary_str, i)
-                pre_images = pre_images * 255.0
-                img1 = Image.fromarray(pre_images[0].astype('uint8'), 'RGB')
-                img1.save("./test_result/{}.tiff".format(i))
-                img2 = Image.fromarray(pre_images[1].astype('uint8'), 'RGB')
-                img2.save("./test_result/{}.tiff".format(i+1))
-
-                i += 2
+            img_data_path1 = "./test_data/input/a0002-dgw_005.tiff"
+            img_data_path2 = "./test_data/input/a0002-dgw_005.tiff"
+            # while (i < dataset.record_numbers):
+                # input_images, output_images = dataset.batch()
+            input_img1 = Image.open(img_data_path1)
+            input_img2 = Image.open(img_data_path2)
+            shape1 = input_img1.size
+            print shape1
+            shape2 = input_img2.size
+            input_img1 = input_img1.resize((512, 512))
+            input_img2 = input_img2.resize((512, 512))
+            input_img1_array = np.array(input_img1, dtype=np.float32)
+            input_img2_array = np.array(input_img2, dtype=np.float32)
+            input_images = np.stack((input_img1_array, input_img2_array))
+            input_images = input_images/255.0
+            pre_images = sess.run(predictions, feed_dict={input_tensor: input_images})
+            # train_writer.add_summary(summary_str, i)
+            pre_images = pre_images * 255.0
+            img1 = Image.fromarray(pre_images[0].astype('uint8'), 'RGB')
+            img1 = img1.resize(shape1)
+            img1.save("./test_result/{}.tiff".format(i))
+            img2 = Image.fromarray(pre_images[1].astype('uint8'), 'RGB')
+            img2 = img2.resize(shape2)
+            img2.save("./test_result/{}.tiff".format(i+1))
 
 if __name__ == '__main__':
     tf.app.run()

@@ -175,22 +175,25 @@ def main(_):
         ckpt = tf.train.get_checkpoint_state(os.path.dirname(FLAGS.train_dir))
         sess = tf.InteractiveSession()
         dataset = RawDataSet(common_params, dataset_params)
+        input_images, small_input_images, output_images = dataset.batch()
 
         colornet_class = nets_factory.get_network(FLAGS.model_name)
         colornet_params = colornet_class.default_params
         color_net = colornet_class(colornet_params)
         color_net_shape = color_net.params.img_shape
 
-        input_tensor = tf.placeholder(tf.float32, shape=(None, 512, 512, 3), name='input_image')
-        gt_tensor = tf.placeholder(tf.float32, shape=(None, 512, 512, 3), name='groundtruth_image')
+        # input_tensor = tf.placeholder(tf.float32, shape=(None, 512, 512, 3), name='input_image')
+        # gt_tensor = tf.placeholder(tf.float32, shape=(None, 512, 512, 3), name='groundtruth_image')
 
         arg_scope = color_net.arg_scope(weight_decay=FLAGS.weight_decay, data_format=DATA_FORMAT)
         with slim.arg_scope(arg_scope):
-            predictions, end_points = color_net.net(input_tensor, is_training=True)
+            change_paramete, end_points = color_net.net(small_input_images, is_training=True)
+            color_net.apply_paramete()
 
+
+
+        color_net.losses(output_images, predictions)
         summaries = set(tf.get_collection(tf.GraphKeys.SUMMARIES))
-
-        color_net.losses(gt_tensor, predictions)
         total_loss = tf.losses.get_total_loss()
         summaries.add(tf.summary.scalar('loss', total_loss))
         for variable in tf.trainable_variables():
@@ -234,7 +237,7 @@ def main(_):
         with slim.queues.QueueRunners(sess):
 
             while (i < FLAGS.max_number_of_steps):
-                input_images, output_images = dataset.batch()
+                # input_images, output_images = dataset.batch()
                 _, summary_str = sess.run([train_op, summary_op], feed_dict={input_tensor: input_images, gt_tensor: output_images})
                 if i % 50 == 0:
                     global_step_str = global_step.eval()
